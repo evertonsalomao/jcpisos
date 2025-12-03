@@ -153,6 +153,9 @@
             <a href="galleries.php" class="<?php echo basename($_SERVER['PHP_SELF']) == 'galleries.php' ? 'active' : ''; ?>">
                 <i class="fas fa-images"></i> Galerias
             </a>
+            <a href="cities.php" class="<?php echo basename($_SERVER['PHP_SELF']) == 'cities.php' ? 'active' : ''; ?>">
+                <i class="fas fa-map-marked-alt"></i> Cidades
+            </a>
             <a href="users.php" class="<?php echo basename($_SERVER['PHP_SELF']) == 'users.php' ? 'active' : ''; ?>">
                 <i class="fas fa-users"></i> Usuários
             </a>

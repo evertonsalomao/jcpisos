@@ -1,0 +1,142 @@
+================================================================================
+SISTEMA DE CIDADES - INSTRUÇÕES DE USO
+================================================================================
+
+✅ TODOS OS ARQUIVOS CRIADOS COM SUCESSO!
+
+📁 ARQUIVOS CRIADOS:
+--------------------
+1. qube-manager/create-cities-table.sql      → Script SQL da tabela
+2. qube-manager/install-cities.php           → Instalador da tabela
+3. qube-manager/cities.php                   → CRUD de cidades (painel)
+4. qube-manager/seed-cities.php              → 8 cidades exemplo
+5. cidade.php                                → Carrega páginas dinamicamente
+6. sitemap.php                               → Gera sitemap.xml automático
+7. 404.php                                   → Página de erro 404
+8. .htaccess                                 → Atualizado com rotas
+9. qube-manager/includes/header.php          → Menu atualizado com "Cidades"
+
+================================================================================
+🚀 INSTALAÇÃO (3 PASSOS):
+================================================================================
+
+PASSO 1: Criar a tabela no banco de dados
+------------------------------------------
+Acesse: http://seusite.com/qube-manager/install-cities.php
+Clique em "Criar Tabela"
+
+PASSO 2: (Opcional) Inserir cidades de exemplo
+------------------------------------------------
+Acesse: http://seusite.com/qube-manager/seed-cities.php
+Clique em "Inserir Cidades"
+
+Isso vai criar 8 cidades exemplo:
+- Sorocaba
+- São Paulo
+- Votorantim
+- Itu
+- Salto
+- Araçoiaba da Serra
+- Piedade
+- Porto Feliz
+
+PASSO 3: Gerenciar cidades
+----------------------------
+Acesse: http://seusite.com/qube-manager/cities.php
+Ou pelo menu lateral: "Cidades"
+
+================================================================================
+🎯 COMO FUNCIONA:
+================================================================================
+
+1. CADASTRO DE CIDADES
+   - Nome: "São Paulo", "Sorocaba", etc.
+   - Slug: Gerado automaticamente (sao-paulo, sorocaba)
+   - Status: Publicado/Rascunho
+   - Ordem: Controla ordem no sitemap
+
+2. URLs DINÂMICAS
+   Ao cadastrar uma cidade, ela fica acessível em:
+   http://seusite.com/bloquete-em-[SLUG]
+
+   Exemplos:
+   - http://seusite.com/bloquete-em-sorocaba
+   - http://seusite.com/bloquete-em-sao-paulo
+   - http://seusite.com/bloquete-em-votorantim
+
+3. CONTEÚDO DINÂMICO
+   O sistema usa o arquivo bloquete-seo.php como template e substitui:
+   - [CIDADE] → Nome da cidade
+   - "Sorocaba" → Nome da cidade
+   - Título da página
+   - Meta description
+
+4. SITEMAP AUTOMÁTICO
+   Acesse: http://seusite.com/sitemap.xml
+
+   O sitemap é gerado automaticamente e inclui:
+   - Páginas estáticas do site
+   - Todas as cidades publicadas
+   - Atualizado automaticamente ao criar/editar/deletar cidades
+
+================================================================================
+📝 FUNCIONALIDADES DO PAINEL:
+================================================================================
+
+✓ Criar nova cidade
+✓ Editar cidade existente
+✓ Excluir cidade
+✓ Slug gerado automaticamente (sem acentos, espaços)
+✓ Sistema de publicação (publicado/rascunho)
+✓ Ordenação customizável
+✓ Link direto para visualizar a página
+✓ Regeneração automática do sitemap
+
+================================================================================
+🔧 CUSTOMIZAÇÃO:
+================================================================================
+
+Para editar o template das páginas de cidades:
+→ Edite o arquivo: bloquete-seo.php
+
+Para ajustar as substituições de texto:
+→ Edite o arquivo: cidade.php (linhas 33-50)
+
+Para adicionar mais páginas no sitemap:
+→ Edite o arquivo: sitemap.php
+
+================================================================================
+⚠️ IMPORTANTE:
+================================================================================
+
+1. O slug é gerado automaticamente baseado no nome
+   - Remove acentos
+   - Converte para minúsculas
+   - Substitui espaços por hífens
+   - Exemplo: "São Paulo" → "sao-paulo"
+
+2. URLs seguem o padrão: /bloquete-em-[slug]
+
+3. Apenas cidades com status "Publicado" aparecem no site e sitemap
+
+4. O sitemap é regenerado automaticamente ao:
+   - Criar cidade
+   - Editar cidade
+   - Excluir cidade
+
+5. Se uma cidade não existir, mostra página 404
+
+================================================================================
+✅ TESTE RÁPIDO:
+================================================================================
+
+1. Acesse: http://seusite.com/qube-manager/cities.php
+2. Clique em "Nova Cidade"
+3. Digite: "Sorocaba"
+4. Clique em "Criar"
+5. Acesse: http://seusite.com/bloquete-em-sorocaba
+6. Veja o sitemap: http://seusite.com/sitemap.xml
+
+================================================================================
+PRONTO! Sistema 100% funcional! 🎉
+================================================================================
