@@ -1,0 +1,56 @@
+========================================
+QUBE MANAGER - INSTRUÇÕES DE INSTALAÇÃO
+========================================
+
+PASSO 1: INSTALAÇÃO INICIAL
+----------------------------
+1. Acesse no navegador: http://seusite.com/qube-manager/install.php
+2. Aguarde a confirmação de criação do usuário e categorias
+3. Clique no link para ir para o login
+
+PASSO 2: PRIMEIRO ACESSO
+-------------------------
+1. Acesse: http://seusite.com/qube-manager/
+2. Use as credenciais:
+   - Usuário: adm_qube
+   - Senha: jj401rbz.
+
+3. IMPORTANTE: Após o primeiro acesso, vá em "Usuários" e altere a senha!
+
+PASSO 3: CRIANDO UMA GALERIA
+-----------------------------
+1. No menu, clique em "Galerias"
+2. Clique no botão "➕ Nova Galeria"
+3. Preencha os campos:
+   - Título: Nome da obra (ex: "Obra Residencial Vila São Paulo")
+   - Categoria: Escolha entre as opções disponíveis
+   - Imagem de Destaque: Escolha a foto principal
+   - Imagens da Galeria: Selecione múltiplas fotos (Ctrl+Clique)
+4. Clique em "Criar Galeria"
+
+PASSO 4: GERENCIANDO CATEGORIAS
+--------------------------------
+1. No menu, clique em "Categorias"
+2. Use o botão "➕ Nova Categoria" para criar novas
+3. As categorias já criadas são:
+   - Residencial/Condomínios
+   - Comercial
+   - Industrial
+
+PASSO 5: GERENCIANDO USUÁRIOS
+------------------------------
+1. No menu, clique em "Usuários"
+2. Para criar novo usuário: clique em "➕ Novo Usuário"
+3. Para alterar senha: clique no ícone 🔑
+4. Para excluir: clique no ícone 🗑️
+
+FUNCIONALIDADES NO SITE
+------------------------
+- A página obras.php exibe automaticamente as galerias
+- Os filtros de categoria funcionam automaticamente
+- Ao clicar na foto, abre um popup com todas as imagens
+- Tudo é gerenciado pelo painel!
+
+SUPORTE
+-------
+Em caso de dúvidas, consulte o arquivo README.md na pasta qube-manager/

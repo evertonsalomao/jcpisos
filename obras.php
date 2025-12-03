@@ -11,26 +11,23 @@
     <!-- Favicon -->
     <link href="img/favicon.ico" rel="icon">
 
-   <?php 
+   <?php
+        define('U', '');
+        define('MENU', 0);
 
-        
+        require_once 'qube-manager/config.php';
 
-        // Nível (Caminho) - '' para a raiz ou index, '../' para subir um nivel, '../../' para subir dois niveis, e assim por diante.
+        $categories = $supabase->select('cms_categories', 'order=name.asc');
+        $galleries = $supabase->select('cms_galleries', 'select=*,cms_categories(slug)&order=created_at.desc');
 
-        define('U', ''); 
-
-        
-
-        // ID da pagina no menu
-
-        define('MENU', 0); 
-
-        
-
-        // Chama o Header
+        $categoriesMap = [];
+        if ($categories) {
+            foreach ($categories as $category) {
+                $categoriesMap[$category['id']] = $category;
+            }
+        }
 
         include(U . 'includes/header-interna.php');
-
     ?>
   
 
@@ -77,194 +74,54 @@
                 <div class="col-12 text-center">
                     <ul class="list-inline mb-5" id="portfolio-flters">
                         <li class="mx-2 active" data-filter="*">Todos</li>
-                        <li class="mx-2" data-filter=".first">Residencial/Condomínios</li>
-                        <li class="mx-2" data-filter=".second">Comercial</li>
-                        <li class="mx-2" data-filter=".third">Industrials</li>
+                        <?php if ($categories): ?>
+                            <?php foreach ($categories as $category): ?>
+                                <li class="mx-2" data-filter=".cat-<?php echo htmlspecialchars($category['slug']); ?>">
+                                    <?php echo htmlspecialchars($category['name']); ?>
+                                </li>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
                     </ul>
                 </div>
             </div>
             
             <div class="row g-4 portfolio-container wow fadeInUp" data-wow-delay="0.5s">
-                
-                <div class="col-lg-3 col-md-6 portfolio-item third">
-                    <div class="portfolio-img overflow-hidden">
-                        <img class="img-fluid" src="img/img-600x400-1.jpg" alt="">
-                        <div class="portfolio-btn">
-                            <a class="btn btn-lg-square btn-outline-light rounded-circle mx-1" href="img/img-600x400-1.jpg" data-lightbox="portfolio"><i class="fa fa-eye"></i></a>
-                            
-                        </div>
-                    </div>
-                    <div class="pt-3">
-                        <p class="port mb-0">Piso Intertravado Comercial</p>
-                        <hr class="port w-25 my-2">
-                        
-                    </div>
-                </div>
+                <?php if ($galleries && count($galleries) > 0): ?>
+                    <?php foreach ($galleries as $gallery): ?>
+                        <?php
+                            $categorySlug = isset($gallery['cms_categories']['slug']) ? $gallery['cms_categories']['slug'] : '';
+                            $galleryImages = $supabase->select('cms_gallery_images', 'gallery_id=eq.' . urlencode($gallery['id']) . '&order=image_order.asc');
+                        ?>
+                        <div class="col-lg-3 col-md-6 portfolio-item cat-<?php echo htmlspecialchars($categorySlug); ?>" data-gallery-id="<?php echo htmlspecialchars($gallery['id']); ?>">
+                            <div class="portfolio-img overflow-hidden">
+                                <img class="img-fluid" src="<?php echo htmlspecialchars($gallery['featured_image']); ?>" alt="<?php echo htmlspecialchars($gallery['title']); ?>">
+                                <div class="portfolio-btn">
+                                    <a class="btn btn-lg-square btn-outline-light rounded-circle mx-1"
+                                       href="<?php echo htmlspecialchars($gallery['featured_image']); ?>"
+                                       data-lightbox="gallery-<?php echo htmlspecialchars($gallery['id']); ?>">
+                                        <i class="fa fa-eye"></i>
+                                    </a>
+                                </div>
+                            </div>
+                            <div class="pt-3">
+                                <p class="port mb-0"><?php echo htmlspecialchars($gallery['title']); ?></p>
+                                <hr class="port w-25 my-2">
+                            </div>
 
-                <div class="col-lg-3 col-md-6 portfolio-item third">
-                    <div class="portfolio-img overflow-hidden">
-                        <img class="img-fluid" src="img/img-600x400-1.jpg" alt="">
-                        <div class="portfolio-btn">
-                            <a class="btn btn-lg-square btn-outline-light rounded-circle mx-1" href="img/img-600x400-1.jpg" data-lightbox="portfolio"><i class="fa fa-eye"></i></a>
-                            
+                            <?php if ($galleryImages && count($galleryImages) > 0): ?>
+                                <?php foreach ($galleryImages as $image): ?>
+                                    <a href="<?php echo htmlspecialchars($image['image_path']); ?>"
+                                       data-lightbox="gallery-<?php echo htmlspecialchars($gallery['id']); ?>"
+                                       style="display:none;"></a>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
                         </div>
+                    <?php endforeach; ?>
+                <?php else: ?>
+                    <div class="col-12 text-center">
+                        <p class="text-muted">Nenhuma obra cadastrada no momento.</p>
                     </div>
-                    <div class="pt-3">
-                        <p class="port mb-0">Piso Intertravado Comercial</p>
-                        <hr class="port w-25 my-2">
-                        
-                    </div>
-                </div>
-
-                <div class="col-lg-3 col-md-6 portfolio-item third">
-                    <div class="portfolio-img overflow-hidden">
-                        <img class="img-fluid" src="img/img-600x400-1.jpg" alt="">
-                        <div class="portfolio-btn">
-                            <a class="btn btn-lg-square btn-outline-light rounded-circle mx-1" href="img/img-600x400-1.jpg" data-lightbox="portfolio"><i class="fa fa-eye"></i></a>
-                            
-                        </div>
-                    </div>
-                    <div class="pt-3">
-                        <p class="port mb-0">Piso Intertravado Comercial</p>
-                        <hr class="port w-25 my-2">
-                        
-                    </div>
-                </div>
-
-                <div class="col-lg-3 col-md-6 portfolio-item third">
-                    <div class="portfolio-img overflow-hidden">
-                        <img class="img-fluid" src="img/img-600x400-1.jpg" alt="">
-                        <div class="portfolio-btn">
-                            <a class="btn btn-lg-square btn-outline-light rounded-circle mx-1" href="img/img-600x400-1.jpg" data-lightbox="portfolio"><i class="fa fa-eye"></i></a>
-                            
-                        </div>
-                    </div>
-                    <div class="pt-3">
-                        <p class="port mb-0">Piso Intertravado Comercial</p>
-                        <hr class="port w-25 my-2">
-                        
-                    </div>
-                </div>
-
-                <div class="col-lg-3 col-md-6 portfolio-item second">
-                    <div class="portfolio-img overflow-hidden">
-                        <img class="img-fluid" src="img/img-600x400-1.jpg" alt="">
-                        <div class="portfolio-btn">
-                            <a class="btn btn-lg-square btn-outline-light rounded-circle mx-1" href="img/img-600x400-1.jpg" data-lightbox="portfolio"><i class="fa fa-eye"></i></a>
-                            
-                        </div>
-                    </div>
-                    <div class="pt-3">
-                        <p class="port mb-0">Piso Intertravado Comercial</p>
-                        <hr class="port w-25 my-2">
-                        
-                    </div>
-                </div>
-
-                <div class="col-lg-3 col-md-6 portfolio-item third">
-                    <div class="portfolio-img overflow-hidden">
-                        <img class="img-fluid" src="img/img-600x400-1.jpg" alt="">
-                        <div class="portfolio-btn">
-                            <a class="btn btn-lg-square btn-outline-light rounded-circle mx-1" href="img/img-600x400-1.jpg" data-lightbox="portfolio"><i class="fa fa-eye"></i></a>
-                            
-                        </div>
-                    </div>
-                    <div class="pt-3">
-                        <p class="port mb-0">Piso Intertravado Comercial</p>
-                        <hr class="port w-25 my-2">
-                        
-                    </div>
-                </div>
-
-                <div class="col-lg-3 col-md-6 portfolio-item first">
-                    <div class="portfolio-img overflow-hidden">
-                        <img class="img-fluid" src="img/img-600x400-1.jpg" alt="">
-                        <div class="portfolio-btn">
-                            <a class="btn btn-lg-square btn-outline-light rounded-circle mx-1" href="img/img-600x400-1.jpg" data-lightbox="portfolio"><i class="fa fa-eye"></i></a>
-                            
-                        </div>
-                    </div>
-                    <div class="pt-3">
-                        <p class="port mb-0">Piso Intertravado Comercial</p>
-                        <hr class="port w-25 my-2">
-                        
-                    </div>
-                </div>
-
-                <div class="col-lg-3 col-md-6 portfolio-item third">
-                    <div class="portfolio-img overflow-hidden">
-                        <img class="img-fluid" src="img/img-600x400-1.jpg" alt="">
-                        <div class="portfolio-btn">
-                            <a class="btn btn-lg-square btn-outline-light rounded-circle mx-1" href="img/img-600x400-1.jpg" data-lightbox="portfolio"><i class="fa fa-eye"></i></a>
-                            
-                        </div>
-                    </div>
-                    <div class="pt-3">
-                        <p class="port mb-0">Piso Intertravado Comercial</p>
-                        <hr class="port w-25 my-2">
-                        
-                    </div>
-                </div>
-
-                <div class="col-lg-3 col-md-6 portfolio-item second">
-                    <div class="portfolio-img overflow-hidden">
-                        <img class="img-fluid" src="img/img-600x400-1.jpg" alt="">
-                        <div class="portfolio-btn">
-                            <a class="btn btn-lg-square btn-outline-light rounded-circle mx-1" href="img/img-600x400-1.jpg" data-lightbox="portfolio"><i class="fa fa-eye"></i></a>
-                            
-                        </div>
-                    </div>
-                    <div class="pt-3">
-                        <p class="port mb-0">Piso Intertravado Comercial</p>
-                        <hr class="port w-25 my-2">
-                        
-                    </div>
-                </div>
-
-                <div class="col-lg-3 col-md-6 portfolio-item third">
-                    <div class="portfolio-img overflow-hidden">
-                        <img class="img-fluid" src="img/img-600x400-1.jpg" alt="">
-                        <div class="portfolio-btn">
-                            <a class="btn btn-lg-square btn-outline-light rounded-circle mx-1" href="img/img-600x400-1.jpg" data-lightbox="portfolio"><i class="fa fa-eye"></i></a>
-                            
-                        </div>
-                    </div>
-                    <div class="pt-3">
-                        <p class="port mb-0">Piso Intertravado Comercial</p>
-                        <hr class="port w-25 my-2">
-                        
-                    </div>
-                </div>
-
-                <div class="col-lg-3 col-md-6 portfolio-item second">
-                    <div class="portfolio-img overflow-hidden">
-                        <img class="img-fluid" src="img/img-600x400-1.jpg" alt="">
-                        <div class="portfolio-btn">
-                            <a class="btn btn-lg-square btn-outline-light rounded-circle mx-1" href="img/img-600x400-1.jpg" data-lightbox="portfolio"><i class="fa fa-eye"></i></a>
-                            
-                        </div>
-                    </div>
-                    <div class="pt-3">
-                        <p class="port mb-0">Piso Intertravado Comercial</p>
-                        <hr class="port w-25 my-2">
-                        
-                    </div>
-                </div>
-
-                <div class="col-lg-3 col-md-6 portfolio-item first">
-                    <div class="portfolio-img overflow-hidden">
-                        <img class="img-fluid" src="img/img-600x400-1.jpg" alt="">
-                        <div class="portfolio-btn">
-                            <a class="btn btn-lg-square btn-outline-light rounded-circle mx-1" href="img/img-600x400-1.jpg" data-lightbox="portfolio"><i class="fa fa-eye"></i></a>
-                            
-                        </div>
-                    </div>
-                    <div class="pt-3">
-                        <p class="port mb-0">Piso Intertravado Comercial</p>
-                        <hr class="port w-25 my-2">
-                        
-                    </div>
-                </div>
+                <?php endif; ?>
             </div>
         </div>
     </div>
