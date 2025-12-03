@@ -5,6 +5,82 @@ checkLogin();
 $database = new Database();
 $db = $database->getConnection();
 
+function optimizeAndSaveImage($sourcePath, $destPath, $extension) {
+    $maxWidth = 1200;
+    $quality = 85;
+
+    $imageInfo = getimagesize($sourcePath);
+    if (!$imageInfo) {
+        return false;
+    }
+
+    $originalWidth = $imageInfo[0];
+    $originalHeight = $imageInfo[1];
+
+    switch ($extension) {
+        case 'jpg':
+        case 'jpeg':
+            $sourceImage = imagecreatefromjpeg($sourcePath);
+            break;
+        case 'png':
+            $sourceImage = imagecreatefrompng($sourcePath);
+            break;
+        case 'gif':
+            $sourceImage = imagecreatefromgif($sourcePath);
+            break;
+        case 'webp':
+            $sourceImage = imagecreatefromwebp($sourcePath);
+            break;
+        default:
+            return false;
+    }
+
+    if (!$sourceImage) {
+        return false;
+    }
+
+    if ($originalWidth > $maxWidth) {
+        $newWidth = $maxWidth;
+        $newHeight = intval(($originalHeight / $originalWidth) * $maxWidth);
+    } else {
+        $newWidth = $originalWidth;
+        $newHeight = $originalHeight;
+    }
+
+    $destImage = imagecreatetruecolor($newWidth, $newHeight);
+
+    if ($extension == 'png' || $extension == 'gif' || $extension == 'webp') {
+        imagealphablending($destImage, false);
+        imagesavealpha($destImage, true);
+        $transparent = imagecolorallocatealpha($destImage, 255, 255, 255, 127);
+        imagefilledrectangle($destImage, 0, 0, $newWidth, $newHeight, $transparent);
+    }
+
+    imagecopyresampled($destImage, $sourceImage, 0, 0, 0, 0, $newWidth, $newHeight, $originalWidth, $originalHeight);
+
+    $result = false;
+    switch ($extension) {
+        case 'jpg':
+        case 'jpeg':
+            $result = imagejpeg($destImage, $destPath, $quality);
+            break;
+        case 'png':
+            $result = imagepng($destImage, $destPath, 9);
+            break;
+        case 'gif':
+            $result = imagegif($destImage, $destPath);
+            break;
+        case 'webp':
+            $result = imagewebp($destImage, $destPath, $quality);
+            break;
+    }
+
+    imagedestroy($sourceImage);
+    imagedestroy($destImage);
+
+    return $result;
+}
+
 $galleryId = $_GET['id'] ?? '';
 $isEdit = !empty($galleryId);
 $pageTitle = $isEdit ? 'Editar Galeria' : 'Nova Galeria';
@@ -32,7 +108,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     if ($action == 'save') {
         $title = $_POST['title'] ?? '';
         $categoryId = $_POST['category_id'] ?? '';
-        $featuredImage = $_POST['featured_image'] ?? '';
+        $featuredImage = $gallery['featured_image'] ?? '';
         $published = isset($_POST['published']) ? 1 : 0;
         $orderIndex = $_POST['order_index'] ?? 0;
 
@@ -74,10 +150,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             }
         }
     } elseif ($action == 'add_image') {
-        $imagePath = $_POST['image_path'] ?? '';
-        $imageTitle = $_POST['image_title'] ?? '';
+        if (!empty($_FILES['images']['name'][0]) && !empty($galleryId)) {
+            $uploadDir = 'uploads/';
+            $uploadedCount = 0;
+            $errorCount = 0;
 
-        if (!empty($imagePath) && !empty($galleryId)) {
             $query = "SELECT COALESCE(MAX(order_index), -1) + 1 as next_order FROM qube_gallery_images WHERE gallery_id = :gallery_id";
             $stmt = $db->prepare($query);
             $stmt->bindParam(':gallery_id', $galleryId);
@@ -85,38 +162,79 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $result = $stmt->fetch(PDO::FETCH_ASSOC);
             $nextOrder = $result['next_order'];
 
-            $imageId = generateUUID();
-            $query = "INSERT INTO qube_gallery_images (id, gallery_id, image_path, title, order_index) VALUES (:id, :gallery_id, :image_path, :title, :order_index)";
-            $stmt = $db->prepare($query);
-            $stmt->bindParam(':id', $imageId);
-            $stmt->bindParam(':gallery_id', $galleryId);
-            $stmt->bindParam(':image_path', $imagePath);
-            $stmt->bindParam(':title', $imageTitle);
-            $stmt->bindParam(':order_index', $nextOrder);
+            foreach ($_FILES['images']['tmp_name'] as $key => $tmpName) {
+                if ($_FILES['images']['error'][$key] === UPLOAD_ERR_OK) {
+                    $originalName = $_FILES['images']['name'][$key];
+                    $extension = strtolower(pathinfo($originalName, PATHINFO_EXTENSION));
 
-            if ($stmt->execute()) {
-                $message = 'Imagem adicionada com sucesso!';
+                    $allowedExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+                    if (!in_array($extension, $allowedExtensions)) {
+                        $errorCount++;
+                        continue;
+                    }
+
+                    $fileName = uniqid() . '_' . time() . '.' . $extension;
+                    $filePath = $uploadDir . $fileName;
+
+                    if (optimizeAndSaveImage($tmpName, $filePath, $extension)) {
+                        $imageId = generateUUID();
+                        $query = "INSERT INTO qube_gallery_images (id, gallery_id, image_path, title, order_index) VALUES (:id, :gallery_id, :image_path, :title, :order_index)";
+                        $stmt = $db->prepare($query);
+                        $stmt->bindParam(':id', $imageId);
+                        $stmt->bindParam(':gallery_id', $galleryId);
+                        $stmt->bindParam(':image_path', $filePath);
+                        $emptyTitle = '';
+                        $stmt->bindParam(':title', $emptyTitle);
+                        $stmt->bindParam(':order_index', $nextOrder);
+
+                        if ($stmt->execute()) {
+                            $uploadedCount++;
+                            $nextOrder++;
+                        } else {
+                            $errorCount++;
+                        }
+                    } else {
+                        $errorCount++;
+                    }
+                }
+            }
+
+            if ($uploadedCount > 0) {
+                $message = $uploadedCount . ' imagem(ns) adicionada(s) com sucesso!';
                 $messageType = 'success';
-            } else {
-                $message = 'Erro ao adicionar imagem';
-                $messageType = 'danger';
+            }
+            if ($errorCount > 0) {
+                $message .= ' ' . $errorCount . ' imagem(ns) não pôde(ram) ser processada(s).';
+                $messageType = $uploadedCount > 0 ? 'warning' : 'danger';
             }
         }
     } elseif ($action == 'delete_image') {
         $imageId = $_POST['image_id'] ?? '';
 
         if (!empty($imageId)) {
-            $query = "DELETE FROM qube_gallery_images WHERE id = :id AND gallery_id = :gallery_id";
+            $query = "SELECT image_path FROM qube_gallery_images WHERE id = :id AND gallery_id = :gallery_id";
             $stmt = $db->prepare($query);
             $stmt->bindParam(':id', $imageId);
             $stmt->bindParam(':gallery_id', $galleryId);
+            $stmt->execute();
+            $image = $stmt->fetch(PDO::FETCH_ASSOC);
 
-            if ($stmt->execute()) {
-                $message = 'Imagem removida com sucesso!';
-                $messageType = 'success';
-            } else {
-                $message = 'Erro ao remover imagem';
-                $messageType = 'danger';
+            if ($image) {
+                $query = "DELETE FROM qube_gallery_images WHERE id = :id AND gallery_id = :gallery_id";
+                $stmt = $db->prepare($query);
+                $stmt->bindParam(':id', $imageId);
+                $stmt->bindParam(':gallery_id', $galleryId);
+
+                if ($stmt->execute()) {
+                    if (file_exists($image['image_path'])) {
+                        unlink($image['image_path']);
+                    }
+                    $message = 'Imagem removida com sucesso!';
+                    $messageType = 'success';
+                } else {
+                    $message = 'Erro ao remover imagem';
+                    $messageType = 'danger';
+                }
             }
         }
     } elseif ($action == 'set_featured') {
@@ -196,12 +314,6 @@ include 'includes/header.php';
                     </select>
                 </div>
 
-                <div class="mb-3">
-                    <label class="form-label">Imagem de Capa (URL)</label>
-                    <input type="text" class="form-control" name="featured_image" value="<?php echo htmlspecialchars($gallery['featured_image'] ?? ''); ?>" placeholder="../img/aplicacoes/condominios.jpg">
-                    <small class="text-muted">URL completa ou relativa da imagem</small>
-                </div>
-
                 <div class="row">
                     <div class="col-md-6 mb-3">
                         <label class="form-label">Ordem de Exibição</label>
@@ -250,7 +362,7 @@ include 'includes/header.php';
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h5 class="mb-0">Imagens da Galeria</h5>
         <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addImageModal">
-            <i class="fas fa-plus"></i> Adicionar Imagem
+            <i class="fas fa-plus"></i> Adicionar Imagens
         </button>
     </div>
 
@@ -258,16 +370,20 @@ include 'includes/header.php';
         <div class="row">
             <?php foreach ($images as $image): ?>
                 <div class="col-md-3 mb-3">
-                    <div class="card">
-                        <img src="<?php echo htmlspecialchars($image['image_path']); ?>" class="card-img-top" alt="<?php echo htmlspecialchars($image['title']); ?>" style="height: 150px; object-fit: cover;">
+                    <div class="card<?php echo ($gallery['featured_image'] ?? '') == $image['image_path'] ? ' border-primary' : ''; ?> position-relative">
+                        <?php if (($gallery['featured_image'] ?? '') == $image['image_path']): ?>
+                            <div class="position-absolute top-0 end-0 m-2" style="z-index: 10;">
+                                <span class="badge bg-primary"><i class="fas fa-star"></i> Capa</span>
+                            </div>
+                        <?php endif; ?>
+                        <img src="<?php echo htmlspecialchars($image['image_path']); ?>" class="card-img-top" alt="Imagem da galeria" style="height: 150px; object-fit: cover;">
                         <div class="card-body p-2">
-                            <p class="card-text small mb-2"><?php echo htmlspecialchars($image['title']); ?></p>
                             <div class="btn-group btn-group-sm w-100" role="group">
-                                <button class="btn btn-outline-primary" onclick="setFeatured('<?php echo htmlspecialchars($image['image_path'], ENT_QUOTES); ?>')">
-                                    <i class="fas fa-star"></i>
+                                <button class="btn btn-outline-primary" onclick="setFeatured('<?php echo htmlspecialchars($image['image_path'], ENT_QUOTES); ?>')" title="Definir como capa">
+                                    <i class="fas fa-star"></i> Capa
                                 </button>
-                                <button class="btn btn-outline-danger" onclick="deleteImage('<?php echo $image['id']; ?>')">
-                                    <i class="fas fa-trash"></i>
+                                <button class="btn btn-outline-danger" onclick="deleteImage('<?php echo $image['id']; ?>')" title="Remover imagem">
+                                    <i class="fas fa-trash"></i> Remover
                                 </button>
                             </div>
                         </div>
@@ -277,7 +393,7 @@ include 'includes/header.php';
         </div>
     <?php else: ?>
         <div class="alert alert-info">
-            <i class="fas fa-info-circle"></i> Nenhuma imagem adicionada. Clique em "Adicionar Imagem" para começar.
+            <i class="fas fa-info-circle"></i> Nenhuma imagem adicionada. Clique em "Adicionar Imagens" para começar.
         </div>
     <?php endif; ?>
 </div>
@@ -286,25 +402,22 @@ include 'includes/header.php';
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Adicionar Imagem</h5>
+                <h5 class="modal-title">Adicionar Imagens</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <form method="POST">
+            <form method="POST" enctype="multipart/form-data">
                 <input type="hidden" name="action" value="add_image">
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label class="form-label">URL da Imagem *</label>
-                        <input type="text" class="form-control" name="image_path" required placeholder="../img/aplicacoes/condominios.jpg">
-                        <small class="text-muted">URL completa ou relativa da imagem</small>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Título</label>
-                        <input type="text" class="form-control" name="image_title" placeholder="Descrição da imagem">
+                        <label class="form-label">Selecionar Imagens *</label>
+                        <input type="file" class="form-control" name="images[]" accept="image/*" multiple required>
+                        <small class="text-muted">Você pode selecionar múltiplas imagens. Formatos: JPG, PNG, GIF, WEBP</small>
+                        <small class="text-muted d-block mt-1">As imagens serão otimizadas automaticamente (largura máxima: 1200px)</small>
                     </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-primary">Adicionar</button>
+                    <button type="submit" class="btn btn-primary">Fazer Upload</button>
                 </div>
             </form>
         </div>
