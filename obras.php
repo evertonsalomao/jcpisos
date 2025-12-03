@@ -98,7 +98,7 @@
                     <?php foreach ($galleries as $gallery): ?>
                         <?php
                             $categorySlug = $gallery['category_slug'] ?? '';
-                            $stmtImages = $db->prepare("SELECT * FROM qube_gallery_images WHERE gallery_id = :gallery_id ORDER BY image_order ASC");
+                            $stmtImages = $db->prepare("SELECT * FROM qube_gallery_images WHERE gallery_id = :gallery_id ORDER BY order_index ASC");
                             $stmtImages->bindParam(':gallery_id', $gallery['id']);
                             $stmtImages->execute();
                             $galleryImages = $stmtImages->fetchAll(PDO::FETCH_ASSOC);
