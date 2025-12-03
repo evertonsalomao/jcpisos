@@ -78,7 +78,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $imageTitle = $_POST['image_title'] ?? '';
 
         if (!empty($imagePath) && !empty($galleryId)) {
-            $query = "SELECT COALESCE(MAX(image_order), -1) + 1 as next_order FROM qube_gallery_images WHERE gallery_id = :gallery_id";
+            $query = "SELECT COALESCE(MAX(order_index), -1) + 1 as next_order FROM qube_gallery_images WHERE gallery_id = :gallery_id";
             $stmt = $db->prepare($query);
             $stmt->bindParam(':gallery_id', $galleryId);
             $stmt->execute();
@@ -86,13 +86,13 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $nextOrder = $result['next_order'];
 
             $imageId = generateUUID();
-            $query = "INSERT INTO qube_gallery_images (id, gallery_id, image_path, title, image_order) VALUES (:id, :gallery_id, :image_path, :title, :image_order)";
+            $query = "INSERT INTO qube_gallery_images (id, gallery_id, image_path, title, order_index) VALUES (:id, :gallery_id, :image_path, :title, :order_index)";
             $stmt = $db->prepare($query);
             $stmt->bindParam(':id', $imageId);
             $stmt->bindParam(':gallery_id', $galleryId);
             $stmt->bindParam(':image_path', $imagePath);
             $stmt->bindParam(':title', $imageTitle);
-            $stmt->bindParam(':image_order', $nextOrder);
+            $stmt->bindParam(':order_index', $nextOrder);
 
             if ($stmt->execute()) {
                 $message = 'Imagem adicionada com sucesso!';
@@ -149,7 +149,7 @@ $categories = $stmtCategories->fetchAll(PDO::FETCH_ASSOC);
 
 $images = [];
 if ($isEdit) {
-    $query = "SELECT * FROM qube_gallery_images WHERE gallery_id = :gallery_id ORDER BY image_order ASC";
+    $query = "SELECT * FROM qube_gallery_images WHERE gallery_id = :gallery_id ORDER BY order_index ASC";
     $stmt = $db->prepare($query);
     $stmt->bindParam(':gallery_id', $galleryId);
     $stmt->execute();
