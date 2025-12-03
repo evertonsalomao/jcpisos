@@ -17,6 +17,10 @@ function checkLogin() {
     }
 }
 
+function isLoggedIn() {
+    return isset($_SESSION['qube_user_id']);
+}
+
 function redirect($url) {
     header('Location: ' . $url);
     exit();
