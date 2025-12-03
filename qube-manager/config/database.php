@@ -2,9 +2,9 @@
 
 class Database {
     private $host = "localhost";
-    private $db_name = "seu_banco_de_dados";
-    private $username = "seu_usuario";
-    private $password = "sua_senha";
+    private $db_name = "jcpisosintertrav_2025db";
+    private $username = "jcpisosintertrav_usrdb";
+    private $password = "dVEnF3T79q4oHRttbB";
     private $charset = "utf8mb4";
     public $conn;
 
