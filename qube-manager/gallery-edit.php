@@ -151,7 +151,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         }
     } elseif ($action == 'add_image') {
         if (!empty($_FILES['images']['name'][0]) && !empty($galleryId)) {
-            $uploadDir = 'uploads/';
+            $physicalUploadDir = 'uploads/';
+            $dbUploadPath = 'uploads/';
             $uploadedCount = 0;
             $errorCount = 0;
 
@@ -174,15 +175,16 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     }
 
                     $fileName = uniqid() . '_' . time() . '.' . $extension;
-                    $filePath = $uploadDir . $fileName;
+                    $physicalPath = $physicalUploadDir . $fileName;
+                    $dbPath = $dbUploadPath . $fileName;
 
-                    if (optimizeAndSaveImage($tmpName, $filePath, $extension)) {
+                    if (optimizeAndSaveImage($tmpName, $physicalPath, $extension)) {
                         $imageId = generateUUID();
                         $query = "INSERT INTO qube_gallery_images (id, gallery_id, image_path, title, order_index) VALUES (:id, :gallery_id, :image_path, :title, :order_index)";
                         $stmt = $db->prepare($query);
                         $stmt->bindParam(':id', $imageId);
                         $stmt->bindParam(':gallery_id', $galleryId);
-                        $stmt->bindParam(':image_path', $filePath);
+                        $stmt->bindParam(':image_path', $dbPath);
                         $emptyTitle = '';
                         $stmt->bindParam(':title', $emptyTitle);
                         $stmt->bindParam(':order_index', $nextOrder);

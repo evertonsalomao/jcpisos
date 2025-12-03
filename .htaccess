@@ -1,0 +1,9 @@
+RewriteEngine On
+
+# Redireciona /uploads/ para /qube-manager/uploads/ de forma transparente
+RewriteRule ^uploads/(.*)$ qube-manager/uploads/$1 [L]
+
+# Bloqueia acesso direto à pasta qube-manager (exceto uploads via rewrite acima)
+RewriteCond %{REQUEST_URI} ^/qube-manager/
+RewriteCond %{REQUEST_URI} !^/qube-manager/uploads/
+RewriteRule ^.*$ - [F,L]
