@@ -20,11 +20,57 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && $step == 1) {
             $sqlFile = __DIR__ . '/database.sql';
             $sql = file_get_contents($sqlFile);
 
-            $statements = array_filter(array_map('trim', explode(';', $sql)));
+            $statements = preg_split('/;\s*$/m', $sql);
 
             foreach ($statements as $statement) {
+                $statement = trim($statement);
                 if (!empty($statement) && !preg_match('/^--/', $statement)) {
-                    $conn->exec($statement);
+                    try {
+                        $conn->exec($statement);
+                    } catch (PDOException $e) {
+                    }
+                }
+            }
+
+            function generateUUID() {
+                return sprintf('%04x%04x-%04x-%04x-%04x-%04x%04x%04x',
+                    mt_rand(0, 0xffff), mt_rand(0, 0xffff),
+                    mt_rand(0, 0xffff),
+                    mt_rand(0, 0x0fff) | 0x4000,
+                    mt_rand(0, 0x3fff) | 0x8000,
+                    mt_rand(0, 0xffff), mt_rand(0, 0xffff), mt_rand(0, 0xffff)
+                );
+            }
+
+            $checkUser = $conn->query("SELECT COUNT(*) FROM qube_users WHERE username = 'adm_qube'")->fetchColumn();
+            if ($checkUser == 0) {
+                $userId = generateUUID();
+                $stmt = $conn->prepare("INSERT INTO qube_users (id, username, password, name, email) VALUES (?, ?, ?, ?, ?)");
+                $stmt->execute([
+                    $userId,
+                    'adm_qube',
+                    '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi',
+                    'Administrador',
+                    'admin@qube.com'
+                ]);
+            }
+
+            $checkCategories = $conn->query("SELECT COUNT(*) FROM qube_categories")->fetchColumn();
+            if ($checkCategories == 0) {
+                $categories = [
+                    ['name' => 'Residencial/Condomínios', 'slug' => 'first', 'order' => 1],
+                    ['name' => 'Comercial', 'slug' => 'second', 'order' => 2],
+                    ['name' => 'Industrial', 'slug' => 'third', 'order' => 3]
+                ];
+
+                $stmt = $conn->prepare("INSERT INTO qube_categories (id, name, slug, order_index) VALUES (?, ?, ?, ?)");
+                foreach ($categories as $cat) {
+                    $stmt->execute([
+                        generateUUID(),
+                        $cat['name'],
+                        $cat['slug'],
+                        $cat['order']
+                    ]);
                 }
             }
 
@@ -60,7 +106,7 @@ class Database {
             exit();
 
         } catch(PDOException $e) {
-            $error = 'Erro na conexão: ' . $e->getMessage();
+            $error = 'Erro na conexão ou instalação: ' . $e->getMessage();
         }
     } else {
         $error = 'Preencha todos os campos obrigatórios';

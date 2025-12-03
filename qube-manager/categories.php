@@ -4,47 +4,52 @@ checkLogin();
 
 $pageTitle = 'Categorias';
 
+$database = new Database();
+$db = $database->getConnection();
+
 $message = '';
 $messageType = '';
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    if (isset($_POST['action'])) {
-        if ($_POST['action'] === 'create') {
-            $name = trim($_POST['name']);
-            $slug = strtolower(preg_replace('/[^a-z0-9]+/', '-', iconv('UTF-8', 'ASCII//TRANSLIT', $name)));
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    $action = $_POST['action'] ?? '';
 
-            $data = [
-                'name' => $name,
-                'slug' => $slug
-            ];
+    if ($action == 'create') {
+        $name = $_POST['name'] ?? '';
+        $slug = $_POST['slug'] ?? '';
+        $order_index = $_POST['order_index'] ?? 0;
 
-            if ($supabase->insert('cms_categories', $data)) {
+        if (!empty($name) && !empty($slug)) {
+            $id = generateUUID();
+            $query = "INSERT INTO qube_categories (id, name, slug, order_index) VALUES (:id, :name, :slug, :order_index)";
+            $stmt = $db->prepare($query);
+            $stmt->bindParam(':id', $id);
+            $stmt->bindParam(':name', $name);
+            $stmt->bindParam(':slug', $slug);
+            $stmt->bindParam(':order_index', $order_index);
+
+            if ($stmt->execute()) {
                 $message = 'Categoria criada com sucesso!';
                 $messageType = 'success';
             } else {
                 $message = 'Erro ao criar categoria';
                 $messageType = 'danger';
             }
-        } elseif ($_POST['action'] === 'delete') {
-            $id = $_POST['id'];
-            if ($supabase->delete('cms_categories', 'id=eq.' . urlencode($id))) {
-                $message = 'Categoria excluída com sucesso!';
-                $messageType = 'success';
-            } else {
-                $message = 'Erro ao excluir categoria';
-                $messageType = 'danger';
-            }
-        } elseif ($_POST['action'] === 'update') {
-            $id = $_POST['id'];
-            $name = trim($_POST['name']);
-            $slug = strtolower(preg_replace('/[^a-z0-9]+/', '-', iconv('UTF-8', 'ASCII//TRANSLIT', $name)));
+        }
+    } elseif ($action == 'update') {
+        $id = $_POST['id'] ?? '';
+        $name = $_POST['name'] ?? '';
+        $slug = $_POST['slug'] ?? '';
+        $order_index = $_POST['order_index'] ?? 0;
 
-            $data = [
-                'name' => $name,
-                'slug' => $slug
-            ];
+        if (!empty($id) && !empty($name) && !empty($slug)) {
+            $query = "UPDATE qube_categories SET name = :name, slug = :slug, order_index = :order_index WHERE id = :id";
+            $stmt = $db->prepare($query);
+            $stmt->bindParam(':id', $id);
+            $stmt->bindParam(':name', $name);
+            $stmt->bindParam(':slug', $slug);
+            $stmt->bindParam(':order_index', $order_index);
 
-            if ($supabase->update('cms_categories', 'id=eq.' . urlencode($id), $data)) {
+            if ($stmt->execute()) {
                 $message = 'Categoria atualizada com sucesso!';
                 $messageType = 'success';
             } else {
@@ -52,237 +57,183 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $messageType = 'danger';
             }
         }
+    } elseif ($action == 'delete') {
+        $id = $_POST['id'] ?? '';
+
+        if (!empty($id)) {
+            $query = "DELETE FROM qube_categories WHERE id = :id";
+            $stmt = $db->prepare($query);
+            $stmt->bindParam(':id', $id);
+
+            if ($stmt->execute()) {
+                $message = 'Categoria excluída com sucesso!';
+                $messageType = 'success';
+            } else {
+                $message = 'Erro ao excluir categoria';
+                $messageType = 'danger';
+            }
+        }
     }
 }
 
-$categories = $supabase->select('cms_categories', 'order=created_at.desc');
+$query = "SELECT * FROM qube_categories ORDER BY order_index ASC, name ASC";
+$stmt = $db->prepare($query);
+$stmt->execute();
+$categories = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+include 'includes/header.php';
 ?>
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Categorias - Qube Manager</title>
-    <link href="../css/bootstrap.min.css" rel="stylesheet">
-    <style>
-        body {
-            background: #f5f5f5;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-        .navbar {
-            background: #1a1a1a;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-        .navbar-brand {
-            color: #ff6b00 !important;
-            font-weight: 600;
-            font-size: 24px;
-        }
-        .nav-link {
-            color: #fff !important;
-            transition: color 0.3s;
-        }
-        .nav-link:hover, .nav-link.active {
-            color: #ff6b00 !important;
-        }
-        .main-content {
-            padding: 30px 0;
-        }
-        .page-header {
-            background: white;
-            border-radius: 12px;
-            padding: 25px;
-            margin-bottom: 30px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-        }
-        .page-header h1 {
-            margin: 0;
-            color: #1a1a1a;
-            font-size: 28px;
-        }
-        .content-card {
-            background: white;
-            border-radius: 12px;
-            padding: 25px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-        }
-        .btn-primary {
-            background: #ff6b00;
-            border: none;
-        }
-        .btn-primary:hover {
-            background: #e55f00;
-        }
-        .table th {
-            background: #f8f9fa;
-            border-bottom: 2px solid #dee2e6;
-        }
-        .badge-category {
-            background: #e3f2fd;
-            color: #1976d2;
-            padding: 5px 10px;
-            border-radius: 20px;
-            font-size: 12px;
-        }
-    </style>
-</head>
-<body>
-    <nav class="navbar navbar-expand-lg navbar-dark">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="dashboard.php">Qube Manager</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="dashboard.php">Dashboard</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link active" href="categories.php">Categorias</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="galleries.php">Galerias</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="users.php">Usuários</a>
-                    </li>
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
-                            <?php echo htmlspecialchars($_SESSION['username']); ?>
-                        </a>
-                        <ul class="dropdown-menu dropdown-menu-end">
-                            <li><a class="dropdown-item" href="logout.php">Sair</a></li>
-                        </ul>
-                    </li>
-                </ul>
-            </div>
-        </div>
-    </nav>
 
-    <div class="container main-content">
-        <div class="page-header">
-            <div class="d-flex justify-content-between align-items-center">
-                <h1>Categorias de Obras</h1>
-                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createModal">
-                    ➕ Nova Categoria
-                </button>
-            </div>
-        </div>
+<?php if ($message): ?>
+    <div class="alert alert-<?php echo $messageType; ?> alert-dismissible fade show" role="alert">
+        <?php echo $message; ?>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+<?php endif; ?>
 
-        <?php if ($message): ?>
-            <div class="alert alert-<?php echo $messageType; ?> alert-dismissible fade show">
-                <?php echo htmlspecialchars($message); ?>
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-        <?php endif; ?>
+<div class="content-card">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h5 class="mb-0">Gerenciar Categorias</h5>
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createModal">
+            <i class="fas fa-plus"></i> Nova Categoria
+        </button>
+    </div>
 
-        <div class="content-card">
-            <table class="table table-hover">
-                <thead>
+    <div class="table-responsive">
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th>Nome</th>
+                    <th>Slug</th>
+                    <th>Ordem</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php foreach ($categories as $category): ?>
                     <tr>
-                        <th>Nome</th>
-                        <th>Slug</th>
-                        <th width="150">Ações</th>
+                        <td><?php echo htmlspecialchars($category['name']); ?></td>
+                        <td><code><?php echo htmlspecialchars($category['slug']); ?></code></td>
+                        <td><?php echo $category['order_index']; ?></td>
+                        <td class="table-actions">
+                            <button class="btn btn-sm btn-primary" onclick="editCategory('<?php echo $category['id']; ?>', '<?php echo htmlspecialchars($category['name']); ?>', '<?php echo htmlspecialchars($category['slug']); ?>', '<?php echo $category['order_index']; ?>')">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn btn-sm btn-danger" onclick="deleteCategory('<?php echo $category['id']; ?>', '<?php echo htmlspecialchars($category['name']); ?>')">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
                     </tr>
-                </thead>
-                <tbody>
-                    <?php if ($categories && count($categories) > 0): ?>
-                        <?php foreach ($categories as $category): ?>
-                            <tr>
-                                <td><?php echo htmlspecialchars($category['name']); ?></td>
-                                <td><span class="badge-category"><?php echo htmlspecialchars($category['slug']); ?></span></td>
-                                <td>
-                                    <button class="btn btn-sm btn-warning"
-                                            onclick="editCategory('<?php echo $category['id']; ?>', '<?php echo htmlspecialchars($category['name'], ENT_QUOTES); ?>')">
-                                        ✏️
-                                    </button>
-                                    <button class="btn btn-sm btn-danger"
-                                            onclick="deleteCategory('<?php echo $category['id']; ?>', '<?php echo htmlspecialchars($category['name'], ENT_QUOTES); ?>')">
-                                        🗑️
-                                    </button>
-                                </td>
-                            </tr>
-                        <?php endforeach; ?>
-                    <?php else: ?>
-                        <tr>
-                            <td colspan="3" class="text-center py-4">Nenhuma categoria cadastrada</td>
-                        </tr>
-                    <?php endif; ?>
-                </tbody>
-            </table>
-        </div>
+                <?php endforeach; ?>
+            </tbody>
+        </table>
     </div>
+</div>
 
-    <div class="modal fade" id="createModal" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <form method="POST">
-                    <input type="hidden" name="action" value="create">
-                    <div class="modal-header">
-                        <h5 class="modal-title">Nova Categoria</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="mb-3">
-                            <label class="form-label">Nome da Categoria</label>
-                            <input type="text" class="form-control" name="name" required>
-                            <small class="text-muted">Ex: Residencial/Condomínios</small>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="submit" class="btn btn-primary">Criar</button>
-                    </div>
-                </form>
+<div class="modal fade" id="createModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Nova Categoria</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
+            <form method="POST">
+                <input type="hidden" name="action" value="create">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Nome</label>
+                        <input type="text" class="form-control" name="name" required>
+                        <small class="text-muted">Ex: Residencial/Condomínios</small>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Slug (classe CSS)</label>
+                        <input type="text" class="form-control" name="slug" required>
+                        <small class="text-muted">Ex: first, second, third (usado para filtro)</small>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Ordem</label>
+                        <input type="number" class="form-control" name="order_index" value="0">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Criar</button>
+                </div>
+            </form>
         </div>
     </div>
+</div>
 
-    <div class="modal fade" id="editModal" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <form method="POST">
-                    <input type="hidden" name="action" value="update">
-                    <input type="hidden" name="id" id="edit_id">
-                    <div class="modal-header">
-                        <h5 class="modal-title">Editar Categoria</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="mb-3">
-                            <label class="form-label">Nome da Categoria</label>
-                            <input type="text" class="form-control" name="name" id="edit_name" required>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="submit" class="btn btn-primary">Salvar</button>
-                    </div>
-                </form>
+<div class="modal fade" id="editModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Editar Categoria</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
+            <form method="POST">
+                <input type="hidden" name="action" value="update">
+                <input type="hidden" name="id" id="edit_id">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Nome</label>
+                        <input type="text" class="form-control" name="name" id="edit_name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Slug (classe CSS)</label>
+                        <input type="text" class="form-control" name="slug" id="edit_slug" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Ordem</label>
+                        <input type="number" class="form-control" name="order_index" id="edit_order_index">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Salvar</button>
+                </div>
+            </form>
         </div>
     </div>
+</div>
 
-    <form id="deleteForm" method="POST" style="display: none;">
-        <input type="hidden" name="action" value="delete">
-        <input type="hidden" name="id" id="delete_id">
-    </form>
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirmar Exclusão</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST">
+                <input type="hidden" name="action" value="delete">
+                <input type="hidden" name="id" id="delete_id">
+                <div class="modal-body">
+                    <p>Tem certeza que deseja excluir a categoria <strong id="delete_name"></strong>?</p>
+                    <p class="text-danger"><small>Esta ação não pode ser desfeita!</small></p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-danger">Excluir</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        function editCategory(id, name) {
-            document.getElementById('edit_id').value = id;
-            document.getElementById('edit_name').value = name;
-            new bootstrap.Modal(document.getElementById('editModal')).show();
-        }
+<script>
+function editCategory(id, name, slug, order) {
+    document.getElementById('edit_id').value = id;
+    document.getElementById('edit_name').value = name;
+    document.getElementById('edit_slug').value = slug;
+    document.getElementById('edit_order_index').value = order;
+    new bootstrap.Modal(document.getElementById('editModal')).show();
+}
 
-        function deleteCategory(id, name) {
-            if (confirm('Tem certeza que deseja excluir a categoria "' + name + '"?')) {
-                document.getElementById('delete_id').value = id;
-                document.getElementById('deleteForm').submit();
-            }
-        }
-    </script>
-</body>
-</html>
+function deleteCategory(id, name) {
+    document.getElementById('delete_id').value = id;
+    document.getElementById('delete_name').textContent = name;
+    new bootstrap.Modal(document.getElementById('deleteModal')).show();
+}
+</script>
+
+<?php include 'includes/footer.php'; ?>
