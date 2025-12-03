@@ -32,26 +32,24 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     if ($action == 'save') {
         $title = $_POST['title'] ?? '';
         $categoryId = $_POST['category_id'] ?? '';
-        $description = $_POST['description'] ?? '';
         $featuredImage = $_POST['featured_image'] ?? '';
         $published = isset($_POST['published']) ? 1 : 0;
         $orderIndex = $_POST['order_index'] ?? 0;
 
         if (!empty($title) && !empty($categoryId)) {
             if ($isEdit) {
-                $query = "UPDATE qube_galleries SET title = :title, category_id = :category_id, description = :description, featured_image = :featured_image, published = :published, order_index = :order_index WHERE id = :id";
+                $query = "UPDATE qube_galleries SET title = :title, category_id = :category_id, featured_image = :featured_image, published = :published, order_index = :order_index WHERE id = :id";
                 $stmt = $db->prepare($query);
                 $stmt->bindParam(':id', $galleryId);
             } else {
                 $galleryId = generateUUID();
-                $query = "INSERT INTO qube_galleries (id, title, category_id, description, featured_image, published, order_index) VALUES (:id, :title, :category_id, :description, :featured_image, :published, :order_index)";
+                $query = "INSERT INTO qube_galleries (id, title, category_id, featured_image, published, order_index) VALUES (:id, :title, :category_id, :featured_image, :published, :order_index)";
                 $stmt = $db->prepare($query);
                 $stmt->bindParam(':id', $galleryId);
             }
 
             $stmt->bindParam(':title', $title);
             $stmt->bindParam(':category_id', $categoryId);
-            $stmt->bindParam(':description', $description);
             $stmt->bindParam(':featured_image', $featuredImage);
             $stmt->bindParam(':published', $published);
             $stmt->bindParam(':order_index', $orderIndex);
@@ -196,11 +194,6 @@ include 'includes/header.php';
                             </option>
                         <?php endforeach; ?>
                     </select>
-                </div>
-
-                <div class="mb-3">
-                    <label class="form-label">Descrição</label>
-                    <textarea class="form-control" name="description" rows="3"><?php echo htmlspecialchars($gallery['description'] ?? ''); ?></textarea>
                 </div>
 
                 <div class="mb-3">
