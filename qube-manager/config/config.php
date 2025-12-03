@@ -1,10 +1,10 @@
 <?php
 session_start();
 
-define('BASE_URL', '/qube-manager/');
-define('SITE_URL', '/');
+define('BASE_URL', '/novosite/qube-manager/');
+define('SITE_URL', '/novosite/');
 define('UPLOAD_PATH', '../uploads/');
-define('UPLOAD_URL', '/uploads/');
+define('UPLOAD_URL', '/novosite/uploads/');
 
 date_default_timezone_set('America/Sao_Paulo');
 
