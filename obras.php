@@ -15,10 +15,18 @@
         define('U', '');
         define('MENU', 0);
 
-        require_once 'qube-manager/config.php';
+        require_once 'qube-manager/config/database.php';
 
-        $categories = $supabase->select('cms_categories', 'order=name.asc');
-        $galleries = $supabase->select('cms_galleries', 'select=*,cms_categories(slug)&order=created_at.desc');
+        $database = new Database();
+        $db = $database->getConnection();
+
+        $stmt = $db->prepare("SELECT * FROM qube_categories ORDER BY order_index ASC, name ASC");
+        $stmt->execute();
+        $categories = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        $stmt = $db->prepare("SELECT g.*, c.slug as category_slug FROM qube_galleries g LEFT JOIN qube_categories c ON g.category_id = c.id WHERE g.published = 1 ORDER BY g.created_at DESC");
+        $stmt->execute();
+        $galleries = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
         $categoriesMap = [];
         if ($categories) {
@@ -89,8 +97,11 @@
                 <?php if ($galleries && count($galleries) > 0): ?>
                     <?php foreach ($galleries as $gallery): ?>
                         <?php
-                            $categorySlug = isset($gallery['cms_categories']['slug']) ? $gallery['cms_categories']['slug'] : '';
-                            $galleryImages = $supabase->select('cms_gallery_images', 'gallery_id=eq.' . urlencode($gallery['id']) . '&order=image_order.asc');
+                            $categorySlug = $gallery['category_slug'] ?? '';
+                            $stmtImages = $db->prepare("SELECT * FROM qube_gallery_images WHERE gallery_id = :gallery_id ORDER BY image_order ASC");
+                            $stmtImages->bindParam(':gallery_id', $gallery['id']);
+                            $stmtImages->execute();
+                            $galleryImages = $stmtImages->fetchAll(PDO::FETCH_ASSOC);
                         ?>
                         <div class="col-lg-3 col-md-6 portfolio-item cat-<?php echo htmlspecialchars($categorySlug); ?>" data-gallery-id="<?php echo htmlspecialchars($gallery['id']); ?>">
                             <div class="portfolio-img overflow-hidden">
