@@ -1,6 +1,8 @@
 <?php
-require_once 'config.php';
-requireLogin();
+require_once 'config/config.php';
+checkLogin();
+
+$pageTitle = 'Categorias';
 
 $message = '';
 $messageType = '';
