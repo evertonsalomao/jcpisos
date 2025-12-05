@@ -58,10 +58,20 @@ echo '<?xml version="1.0" encoding="UTF-8"?>';
         <priority>0.7</priority>
     </url>
 
-    <!-- Páginas de Cidades Dinâmicas -->
+    <!-- Páginas de Cidades Dinâmicas - Bloquetes -->
     <?php foreach ($cities as $city): ?>
     <url>
         <loc><?php echo $domain; ?>/bloquete-em-<?php echo htmlspecialchars($city['slug']); ?></loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.9</priority>
+        <lastmod><?php echo date('Y-m-d', strtotime($city['updated_at'])); ?></lastmod>
+    </url>
+    <?php endforeach; ?>
+
+    <!-- Páginas de Cidades Dinâmicas - Pisos Intertravados -->
+    <?php foreach ($cities as $city): ?>
+    <url>
+        <loc><?php echo $domain; ?>/piso-intertravado-em-<?php echo htmlspecialchars($city['slug']); ?></loc>
         <changefreq>weekly</changefreq>
         <priority>0.9</priority>
         <lastmod><?php echo date('Y-m-d', strtotime($city['updated_at'])); ?></lastmod>

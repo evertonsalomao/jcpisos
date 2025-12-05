@@ -161,8 +161,11 @@ include 'includes/header.php';
                         </td>
                         <td><?php echo $city['order_index']; ?></td>
                         <td>
-                            <a href="/bloquete-em-<?php echo $city['slug']; ?>" target="_blank" class="text-primary">
-                                <i class="fas fa-external-link-alt"></i>
+                            <a href="/bloquete-em-<?php echo $city['slug']; ?>" target="_blank" class="text-primary me-2" title="Ver página Bloquete">
+                                <i class="fas fa-external-link-alt"></i> Bloquete
+                            </a>
+                            <a href="/piso-intertravado-em-<?php echo $city['slug']; ?>" target="_blank" class="text-success" title="Ver página Piso">
+                                <i class="fas fa-external-link-alt"></i> Piso
                             </a>
                         </td>
                         <td class="table-actions">
