@@ -8,11 +8,24 @@ $database = new Database();
 $db = $database->getConnection();
 
 $stats = [
+    'products' => 0,
+    'colors' => 0,
     'categories' => 0,
     'galleries' => 0,
     'images' => 0,
+    'cities' => 0,
     'users' => 0
 ];
+
+$query = "SELECT COUNT(*) as total FROM qube_products";
+$stmt = $db->prepare($query);
+$stmt->execute();
+$stats['products'] = $stmt->fetch(PDO::FETCH_ASSOC)['total'];
+
+$query = "SELECT COUNT(*) as total FROM qube_colors";
+$stmt = $db->prepare($query);
+$stmt->execute();
+$stats['colors'] = $stmt->fetch(PDO::FETCH_ASSOC)['total'];
 
 $query = "SELECT COUNT(*) as total FROM qube_categories";
 $stmt = $db->prepare($query);
@@ -28,6 +41,11 @@ $query = "SELECT COUNT(*) as total FROM qube_gallery_images";
 $stmt = $db->prepare($query);
 $stmt->execute();
 $stats['images'] = $stmt->fetch(PDO::FETCH_ASSOC)['total'];
+
+$query = "SELECT COUNT(*) as total FROM qube_cities";
+$stmt = $db->prepare($query);
+$stmt->execute();
+$stats['cities'] = $stmt->fetch(PDO::FETCH_ASSOC)['total'];
 
 $query = "SELECT COUNT(*) as total FROM qube_users";
 $stmt = $db->prepare($query);
@@ -215,11 +233,20 @@ $recentGalleries = $stmt->fetchAll(PDO::FETCH_ASSOC);
             <a href="index.php" class="active">
                 <i class="fas fa-home"></i> Dashboard
             </a>
+            <a href="products.php">
+                <i class="fas fa-box"></i> Produtos
+            </a>
+            <a href="colors.php">
+                <i class="fas fa-palette"></i> Cores
+            </a>
             <a href="categories.php">
                 <i class="fas fa-folder"></i> Categorias
             </a>
             <a href="galleries.php">
                 <i class="fas fa-images"></i> Galerias
+            </a>
+            <a href="cities.php">
+                <i class="fas fa-map-marked-alt"></i> Cidades
             </a>
             <a href="users.php">
                 <i class="fas fa-users"></i> Usuários
@@ -239,8 +266,26 @@ $recentGalleries = $stmt->fetchAll(PDO::FETCH_ASSOC);
         </div>
 
         <div class="row">
-            <div class="col-md-3 mb-4">
+            <div class="col-md-4 col-lg-3 mb-4">
                 <div class="stats-card primary">
+                    <div class="icon">
+                        <i class="fas fa-box"></i>
+                    </div>
+                    <h3><?php echo $stats['products']; ?></h3>
+                    <p>Produtos</p>
+                </div>
+            </div>
+            <div class="col-md-4 col-lg-3 mb-4">
+                <div class="stats-card success">
+                    <div class="icon">
+                        <i class="fas fa-palette"></i>
+                    </div>
+                    <h3><?php echo $stats['colors']; ?></h3>
+                    <p>Cores</p>
+                </div>
+            </div>
+            <div class="col-md-4 col-lg-3 mb-4">
+                <div class="stats-card info">
                     <div class="icon">
                         <i class="fas fa-folder"></i>
                     </div>
@@ -248,8 +293,8 @@ $recentGalleries = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     <p>Categorias</p>
                 </div>
             </div>
-            <div class="col-md-3 mb-4">
-                <div class="stats-card success">
+            <div class="col-md-4 col-lg-3 mb-4">
+                <div class="stats-card warning">
                     <div class="icon">
                         <i class="fas fa-images"></i>
                     </div>
@@ -257,7 +302,7 @@ $recentGalleries = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     <p>Galerias</p>
                 </div>
             </div>
-            <div class="col-md-3 mb-4">
+            <div class="col-md-4 col-lg-3 mb-4">
                 <div class="stats-card info">
                     <div class="icon">
                         <i class="fas fa-image"></i>
@@ -266,7 +311,16 @@ $recentGalleries = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     <p>Imagens</p>
                 </div>
             </div>
-            <div class="col-md-3 mb-4">
+            <div class="col-md-4 col-lg-3 mb-4">
+                <div class="stats-card success">
+                    <div class="icon">
+                        <i class="fas fa-map-marked-alt"></i>
+                    </div>
+                    <h3><?php echo $stats['cities']; ?></h3>
+                    <p>Cidades</p>
+                </div>
+            </div>
+            <div class="col-md-4 col-lg-3 mb-4">
                 <div class="stats-card warning">
                     <div class="icon">
                         <i class="fas fa-users"></i>
