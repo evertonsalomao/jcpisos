@@ -1,5 +1,6 @@
 <?php
 session_start();
+require_once 'config/config.php';
 require_once 'config/database.php';
 
 if (!isset($_SESSION['qube_user_id'])) {
@@ -31,7 +32,7 @@ try {
     // Upload de imagem
     $imagePath = null;
     if (isset($_FILES['image']) && $_FILES['image']['error'] === 0) {
-        $uploadDir = 'uploads/products/';
+        $uploadDir = '../uploads/products/';
         if (!file_exists($uploadDir)) {
             mkdir($uploadDir, 0777, true);
         }
@@ -40,7 +41,7 @@ try {
         $targetPath = $uploadDir . $fileName;
 
         if (move_uploaded_file($_FILES['image']['tmp_name'], $targetPath)) {
-            $imagePath = $targetPath;
+            $imagePath = 'uploads/products/' . $fileName;
 
             // Se edição, remove imagem antiga
             if ($isEdit) {
@@ -49,8 +50,8 @@ try {
                 $stmtOld->bindParam(':id', $productId);
                 $stmtOld->execute();
                 $oldImage = $stmtOld->fetch(PDO::FETCH_ASSOC);
-                if ($oldImage && file_exists($oldImage['image_path'])) {
-                    unlink($oldImage['image_path']);
+                if ($oldImage && file_exists('../' . $oldImage['image_path'])) {
+                    unlink('../' . $oldImage['image_path']);
                 }
             }
         }
@@ -76,9 +77,11 @@ try {
             throw new Exception('Imagem é obrigatória para novos produtos');
         }
 
-        $query = "INSERT INTO qube_products (title, slug, description, description_below_image, image_path, is_published, order_index)
-                  VALUES (:title, :slug, :description, :desc_below, :image, :published, :order)";
+        $productId = generateUUID();
+        $query = "INSERT INTO qube_products (id, title, slug, description, description_below_image, image_path, is_published, order_index)
+                  VALUES (:id, :title, :slug, :description, :desc_below, :image, :published, :order)";
         $stmt = $db->prepare($query);
+        $stmt->bindParam(':id', $productId);
         $stmt->bindParam(':image', $imagePath);
     }
 
@@ -90,10 +93,6 @@ try {
     $stmt->bindParam(':order', $orderIndex);
     $stmt->execute();
 
-    if (!$isEdit) {
-        $productId = $db->lastInsertId();
-    }
-
     // CORES: Remove e recria
     $query = "DELETE FROM qube_product_colors WHERE product_id = :id";
     $stmt = $db->prepare($query);
@@ -103,8 +102,10 @@ try {
     if (!empty($_POST['colors'])) {
         $colorOrder = 0;
         foreach ($_POST['colors'] as $colorId) {
-            $query = "INSERT INTO qube_product_colors (product_id, color_id, order_index) VALUES (:product_id, :color_id, :order)";
+            $pcId = generateUUID();
+            $query = "INSERT INTO qube_product_colors (id, product_id, color_id, order_index) VALUES (:id, :product_id, :color_id, :order)";
             $stmt = $db->prepare($query);
+            $stmt->bindParam(':id', $pcId);
             $stmt->bindParam(':product_id', $productId);
             $stmt->bindParam(':color_id', $colorId);
             $stmt->bindParam(':order', $colorOrder);
@@ -121,9 +122,11 @@ try {
 
     if (!empty($_POST['dimensions'])) {
         foreach ($_POST['dimensions'] as $dim) {
-            $query = "INSERT INTO qube_product_dimensions (product_id, dimension, thickness, resistance, usage_indication, order_index)
-                      VALUES (:product_id, :dimension, :thickness, :resistance, :usage, :order)";
+            $dimId = generateUUID();
+            $query = "INSERT INTO qube_product_dimensions (id, product_id, dimension, thickness, resistance, usage_indication, order_index)
+                      VALUES (:id, :product_id, :dimension, :thickness, :resistance, :usage, :order)";
             $stmt = $db->prepare($query);
+            $stmt->bindParam(':id', $dimId);
             $stmt->bindParam(':product_id', $productId);
             $stmt->bindParam(':dimension', $dim['dimension']);
             $stmt->bindParam(':thickness', $dim['thickness']);
@@ -142,8 +145,10 @@ try {
 
     if (!empty($_POST['advantages'])) {
         foreach ($_POST['advantages'] as $adv) {
-            $query = "INSERT INTO qube_product_advantages (product_id, text, order_index) VALUES (:product_id, :text, :order)";
+            $advId = generateUUID();
+            $query = "INSERT INTO qube_product_advantages (id, product_id, text, order_index) VALUES (:id, :product_id, :text, :order)";
             $stmt = $db->prepare($query);
+            $stmt->bindParam(':id', $advId);
             $stmt->bindParam(':product_id', $productId);
             $stmt->bindParam(':text', $adv['text']);
             $stmt->bindParam(':order', $adv['order_index']);
@@ -159,8 +164,10 @@ try {
 
     if (!empty($_POST['applications'])) {
         foreach ($_POST['applications'] as $app) {
-            $query = "INSERT INTO qube_product_applications (product_id, text, order_index) VALUES (:product_id, :text, :order)";
+            $appId = generateUUID();
+            $query = "INSERT INTO qube_product_applications (id, product_id, text, order_index) VALUES (:id, :product_id, :text, :order)";
             $stmt = $db->prepare($query);
+            $stmt->bindParam(':id', $appId);
             $stmt->bindParam(':product_id', $productId);
             $stmt->bindParam(':text', $app['text']);
             $stmt->bindParam(':order', $app['order_index']);
@@ -176,8 +183,10 @@ try {
 
     if (!empty($_POST['faqs'])) {
         foreach ($_POST['faqs'] as $faq) {
-            $query = "INSERT INTO qube_product_faqs (product_id, question, answer, order_index) VALUES (:product_id, :question, :answer, :order)";
+            $faqId = generateUUID();
+            $query = "INSERT INTO qube_product_faqs (id, product_id, question, answer, order_index) VALUES (:id, :product_id, :question, :answer, :order)";
             $stmt = $db->prepare($query);
+            $stmt->bindParam(':id', $faqId);
             $stmt->bindParam(':product_id', $productId);
             $stmt->bindParam(':question', $faq['question']);
             $stmt->bindParam(':answer', $faq['answer']);

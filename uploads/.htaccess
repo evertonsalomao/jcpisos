@@ -1,0 +1,16 @@
+# Permite acesso às imagens
+<FilesMatch "\.(jpg|jpeg|png|gif|webp|svg)$">
+    Order allow,deny
+    Allow from all
+</FilesMatch>
+
+# Bloqueia acesso a outros tipos de arquivo
+<FilesMatch "^.*$">
+    Order deny,allow
+    Deny from all
+</FilesMatch>
+
+<FilesMatch "\.(jpg|jpeg|png|gif|webp|svg)$">
+    Order allow,deny
+    Allow from all
+</FilesMatch>

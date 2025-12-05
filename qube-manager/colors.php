@@ -14,7 +14,8 @@ $db = $database->getConnection();
 
 // Processar upload de imagem
 function uploadColorImage($file) {
-    $uploadDir = 'uploads/colors/';
+    // Salva na raiz do projeto em /uploads/colors/
+    $uploadDir = '../uploads/colors/';
     if (!file_exists($uploadDir)) {
         mkdir($uploadDir, 0777, true);
     }
@@ -23,7 +24,8 @@ function uploadColorImage($file) {
     $targetPath = $uploadDir . $fileName;
 
     if (move_uploaded_file($file['tmp_name'], $targetPath)) {
-        return $targetPath;
+        // Retorna o caminho relativo à raiz do site
+        return 'uploads/colors/' . $fileName;
     }
     return false;
 }
@@ -79,8 +81,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $stmtOld->bindParam(':id', $id);
                 $stmtOld->execute();
                 $oldImage = $stmtOld->fetch(PDO::FETCH_ASSOC);
-                if ($oldImage && file_exists($oldImage['image_path'])) {
-                    unlink($oldImage['image_path']);
+                if ($oldImage && file_exists('../' . $oldImage['image_path'])) {
+                    unlink('../' . $oldImage['image_path']);
                 }
 
                 $query = "UPDATE qube_colors SET name = :name, image_path = :image_path, order_index = :order_index, updated_at = now() WHERE id = :id";
@@ -118,8 +120,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmtImg->bindParam(':id', $id);
         $stmtImg->execute();
         $imageData = $stmtImg->fetch(PDO::FETCH_ASSOC);
-        if ($imageData && file_exists($imageData['image_path'])) {
-            unlink($imageData['image_path']);
+        if ($imageData && file_exists('../' . $imageData['image_path'])) {
+            unlink('../' . $imageData['image_path']);
         }
 
         $query = "DELETE FROM qube_colors WHERE id = :id";

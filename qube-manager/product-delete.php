@@ -32,8 +32,8 @@ try {
 
     if ($stmt->execute()) {
         // Remove imagem do servidor
-        if ($product && file_exists($product['image_path'])) {
-            unlink($product['image_path']);
+        if ($product && file_exists('../' . $product['image_path'])) {
+            unlink('../' . $product['image_path']);
         }
 
         $_SESSION['success'] = 'Produto excluído com sucesso!';
