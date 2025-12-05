@@ -1,5 +1,6 @@
 <?php
 session_start();
+require_once 'config/config.php';
 require_once 'config/database.php';
 
 // Verifica se usuário está logado
@@ -40,8 +41,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $imagePath = uploadColorImage($_FILES['image']);
 
             if ($imagePath) {
-                $query = "INSERT INTO qube_colors (name, image_path, order_index) VALUES (:name, :image_path, :order_index)";
+                $uuid = generateUUID();
+
+                $query = "INSERT INTO qube_colors (id, name, image_path, order_index) VALUES (:id, :name, :image_path, :order_index)";
                 $stmt = $db->prepare($query);
+                $stmt->bindParam(':id', $uuid);
                 $stmt->bindParam(':name', $name);
                 $stmt->bindParam(':image_path', $imagePath);
                 $stmt->bindParam(':order_index', $order);
