@@ -32,7 +32,7 @@ try {
     // Upload de imagem
     $imagePath = null;
     if (isset($_FILES['image']) && $_FILES['image']['error'] === 0) {
-        $uploadDir = '../uploads/products/';
+        $uploadDir = 'uploads/products/';
         if (!file_exists($uploadDir)) {
             mkdir($uploadDir, 0777, true);
         }
@@ -41,7 +41,7 @@ try {
         $targetPath = $uploadDir . $fileName;
 
         if (move_uploaded_file($_FILES['image']['tmp_name'], $targetPath)) {
-            $imagePath = 'uploads/products/' . $fileName;
+            $imagePath = $targetPath;
 
             // Se edição, remove imagem antiga
             if ($isEdit) {
@@ -50,8 +50,8 @@ try {
                 $stmtOld->bindParam(':id', $productId);
                 $stmtOld->execute();
                 $oldImage = $stmtOld->fetch(PDO::FETCH_ASSOC);
-                if ($oldImage && file_exists('../' . $oldImage['image_path'])) {
-                    unlink('../' . $oldImage['image_path']);
+                if ($oldImage && file_exists($oldImage['image_path'])) {
+                    unlink($oldImage['image_path']);
                 }
             }
         }

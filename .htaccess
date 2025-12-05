@@ -12,6 +12,7 @@ RewriteRule ^piso-intertravado-em-([a-z0-9-]+)/?$ piso-cidade.php?slug=$1 [L,QSA
 # Redireciona URLs de produtos para produto-dinamico.php
 RewriteRule ^produto/([a-z0-9-]+)/?$ produto-dinamico.php?slug=$1 [L,QSA]
 
-# Bloqueia acesso direto à pasta qube-manager
+# Bloqueia acesso direto à pasta qube-manager (exceto uploads)
 RewriteCond %{REQUEST_URI} ^/qube-manager/
+RewriteCond %{REQUEST_URI} !^/qube-manager/uploads/
 RewriteRule ^.*$ - [F,L]

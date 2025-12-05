@@ -58,7 +58,7 @@ include 'includes/header.php';
                     <?php foreach ($products as $product): ?>
                     <tr>
                         <td>
-                            <img src="/<?php echo htmlspecialchars($product['image_path']); ?>"
+                            <img src="/qube-manager/<?php echo htmlspecialchars($product['image_path']); ?>"
                                  alt="<?php echo htmlspecialchars($product['title']); ?>"
                                  style="width: 60px; height: 60px; object-fit: cover; border-radius: 4px;">
                         </td>

@@ -14,8 +14,7 @@ $db = $database->getConnection();
 
 // Processar upload de imagem
 function uploadColorImage($file) {
-    // Salva na raiz do projeto em /uploads/colors/
-    $uploadDir = '../uploads/colors/';
+    $uploadDir = 'uploads/colors/';
     if (!file_exists($uploadDir)) {
         mkdir($uploadDir, 0777, true);
     }
@@ -24,8 +23,7 @@ function uploadColorImage($file) {
     $targetPath = $uploadDir . $fileName;
 
     if (move_uploaded_file($file['tmp_name'], $targetPath)) {
-        // Retorna o caminho relativo à raiz do site
-        return 'uploads/colors/' . $fileName;
+        return $targetPath;
     }
     return false;
 }
@@ -81,8 +79,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $stmtOld->bindParam(':id', $id);
                 $stmtOld->execute();
                 $oldImage = $stmtOld->fetch(PDO::FETCH_ASSOC);
-                if ($oldImage && file_exists('../' . $oldImage['image_path'])) {
-                    unlink('../' . $oldImage['image_path']);
+                if ($oldImage && file_exists($oldImage['image_path'])) {
+                    unlink($oldImage['image_path']);
                 }
 
                 $query = "UPDATE qube_colors SET name = :name, image_path = :image_path, order_index = :order_index, updated_at = now() WHERE id = :id";
@@ -120,8 +118,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmtImg->bindParam(':id', $id);
         $stmtImg->execute();
         $imageData = $stmtImg->fetch(PDO::FETCH_ASSOC);
-        if ($imageData && file_exists('../' . $imageData['image_path'])) {
-            unlink('../' . $imageData['image_path']);
+        if ($imageData && file_exists($imageData['image_path'])) {
+            unlink($imageData['image_path']);
         }
 
         $query = "DELETE FROM qube_colors WHERE id = :id";
@@ -191,7 +189,7 @@ include 'includes/header.php';
                     <?php foreach ($colors as $color): ?>
                     <tr>
                         <td>
-                            <img src="/<?php echo htmlspecialchars($color['image_path']); ?>"
+                            <img src="/qube-manager/<?php echo htmlspecialchars($color['image_path']); ?>"
                                  alt="<?php echo htmlspecialchars($color['name']); ?>"
                                  style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px;">
                         </td>
@@ -306,7 +304,7 @@ function editColor(id, name, order, imagePath) {
     document.getElementById('edit_id').value = id;
     document.getElementById('edit_name').value = name;
     document.getElementById('edit_order').value = order;
-    document.getElementById('edit_current_image').src = '/' + imagePath;
+    document.getElementById('edit_current_image').src = '/qube-manager/' + imagePath;
 
     new bootstrap.Modal(document.getElementById('editModal')).show();
 }
