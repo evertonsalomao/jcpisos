@@ -131,6 +131,24 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $stmt->bindParam(':order_index', $orderIndex);
 
             if ($stmt->execute()) {
+                // Salvar produtos associados
+                $query = "DELETE FROM qube_gallery_products WHERE gallery_id = :gallery_id";
+                $stmt = $db->prepare($query);
+                $stmt->bindParam(':gallery_id', $galleryId);
+                $stmt->execute();
+
+                if (!empty($_POST['products'])) {
+                    foreach ($_POST['products'] as $productId) {
+                        $query = "INSERT INTO qube_gallery_products (id, gallery_id, product_id) VALUES (:id, :gallery_id, :product_id)";
+                        $stmt = $db->prepare($query);
+                        $insertId = generateUUID();
+                        $stmt->bindParam(':id', $insertId);
+                        $stmt->bindParam(':gallery_id', $galleryId);
+                        $stmt->bindParam(':product_id', $productId);
+                        $stmt->execute();
+                    }
+                }
+
                 $message = $isEdit ? 'Galeria atualizada com sucesso!' : 'Galeria criada com sucesso!';
                 $messageType = 'success';
 
@@ -138,6 +156,13 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     header('Location: gallery-edit.php?id=' . $galleryId);
                     exit();
                 }
+
+                // Recarregar produtos selecionados
+                $query = "SELECT product_id FROM qube_gallery_products WHERE gallery_id = :gallery_id";
+                $stmt = $db->prepare($query);
+                $stmt->bindParam(':gallery_id', $galleryId);
+                $stmt->execute();
+                $selectedProducts = $stmt->fetchAll(PDO::FETCH_COLUMN);
 
                 $query = "SELECT * FROM qube_galleries WHERE id = :id";
                 $stmt = $db->prepare($query);
@@ -267,6 +292,22 @@ $stmtCategories = $db->prepare($queryCategories);
 $stmtCategories->execute();
 $categories = $stmtCategories->fetchAll(PDO::FETCH_ASSOC);
 
+// Buscar todos os produtos
+$queryProducts = "SELECT * FROM qube_products WHERE is_published = 1 ORDER BY order_index ASC, title ASC";
+$stmtProducts = $db->prepare($queryProducts);
+$stmtProducts->execute();
+$products = $stmtProducts->fetchAll(PDO::FETCH_ASSOC);
+
+// Buscar produtos associados a esta galeria
+$selectedProducts = [];
+if ($isEdit) {
+    $query = "SELECT product_id FROM qube_gallery_products WHERE gallery_id = :gallery_id";
+    $stmt = $db->prepare($query);
+    $stmt->bindParam(':gallery_id', $galleryId);
+    $stmt->execute();
+    $selectedProducts = $stmt->fetchAll(PDO::FETCH_COLUMN);
+}
+
 $images = [];
 if ($isEdit) {
     $query = "SELECT * FROM qube_gallery_images WHERE gallery_id = :gallery_id ORDER BY order_index ASC";
@@ -314,6 +355,28 @@ include 'includes/header.php';
                             </option>
                         <?php endforeach; ?>
                     </select>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Produtos Utilizados</label>
+                    <div style="max-height: 200px; overflow-y: auto; border: 1px solid #dee2e6; border-radius: 4px; padding: 10px;">
+                        <?php if (empty($products)): ?>
+                            <small class="text-muted">Nenhum produto cadastrado. <a href="products.php" target="_blank">Cadastre produtos aqui</a>.</small>
+                        <?php else: ?>
+                            <?php foreach ($products as $product): ?>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="products[]"
+                                           value="<?php echo $product['id']; ?>"
+                                           id="product_<?php echo $product['id']; ?>"
+                                           <?php echo in_array($product['id'], $selectedProducts) ? 'checked' : ''; ?>>
+                                    <label class="form-check-label" for="product_<?php echo $product['id']; ?>">
+                                        <?php echo htmlspecialchars($product['title']); ?>
+                                    </label>
+                                </div>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
+                    </div>
+                    <small class="text-muted">Selecione os produtos que aparecem nesta galeria</small>
                 </div>
 
                 <div class="row">

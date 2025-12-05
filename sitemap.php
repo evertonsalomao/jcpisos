@@ -16,6 +16,12 @@ $stmt = $db->prepare($query);
 $stmt->execute();
 $cities = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
+// Busca todos os produtos publicados
+$query = "SELECT slug, updated_at FROM qube_products WHERE is_published = 1 ORDER BY order_index ASC, title ASC";
+$stmt = $db->prepare($query);
+$stmt->execute();
+$products = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
 echo '<?xml version="1.0" encoding="UTF-8"?>';
 ?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
@@ -75,6 +81,16 @@ echo '<?xml version="1.0" encoding="UTF-8"?>';
         <changefreq>weekly</changefreq>
         <priority>0.9</priority>
         <lastmod><?php echo date('Y-m-d', strtotime($city['updated_at'])); ?></lastmod>
+    </url>
+    <?php endforeach; ?>
+
+    <!-- Páginas de Produtos Dinâmicas -->
+    <?php foreach ($products as $product): ?>
+    <url>
+        <loc><?php echo $domain; ?>/produto/<?php echo htmlspecialchars($product['slug']); ?></loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.8</priority>
+        <lastmod><?php echo date('Y-m-d', strtotime($product['updated_at'])); ?></lastmod>
     </url>
     <?php endforeach; ?>
 </urlset>

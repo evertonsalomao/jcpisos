@@ -147,10 +147,16 @@
             <a href="index.php" class="<?php echo basename($_SERVER['PHP_SELF']) == 'index.php' ? 'active' : ''; ?>">
                 <i class="fas fa-home"></i> Dashboard
             </a>
+            <a href="products.php" class="<?php echo in_array(basename($_SERVER['PHP_SELF']), ['products.php', 'product-edit.php']) ? 'active' : ''; ?>">
+                <i class="fas fa-box"></i> Produtos
+            </a>
+            <a href="colors.php" class="<?php echo basename($_SERVER['PHP_SELF']) == 'colors.php' ? 'active' : ''; ?>">
+                <i class="fas fa-palette"></i> Cores
+            </a>
             <a href="categories.php" class="<?php echo basename($_SERVER['PHP_SELF']) == 'categories.php' ? 'active' : ''; ?>">
                 <i class="fas fa-folder"></i> Categorias
             </a>
-            <a href="galleries.php" class="<?php echo basename($_SERVER['PHP_SELF']) == 'galleries.php' ? 'active' : ''; ?>">
+            <a href="galleries.php" class="<?php echo in_array(basename($_SERVER['PHP_SELF']), ['galleries.php', 'gallery-edit.php']) ? 'active' : ''; ?>">
                 <i class="fas fa-images"></i> Galerias
             </a>
             <a href="cities.php" class="<?php echo basename($_SERVER['PHP_SELF']) == 'cities.php' ? 'active' : ''; ?>">

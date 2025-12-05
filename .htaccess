@@ -9,6 +9,9 @@ RewriteRule ^bloquete-em-([a-z0-9-]+)/?$ cidade.php?slug=$1 [L,QSA]
 # Redireciona URLs de pisos intertravados para piso-cidade.php
 RewriteRule ^piso-intertravado-em-([a-z0-9-]+)/?$ piso-cidade.php?slug=$1 [L,QSA]
 
+# Redireciona URLs de produtos para produto-dinamico.php
+RewriteRule ^produto/([a-z0-9-]+)/?$ produto-dinamico.php?slug=$1 [L,QSA]
+
 # Redireciona /uploads/ para /qube-manager/uploads/ de forma transparente
 RewriteRule ^uploads/(.*)$ qube-manager/uploads/$1 [L]
 
